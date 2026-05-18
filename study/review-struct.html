@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Programming Review — Strings, Enums & Unions</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #13161e;
+  --surface2: #1a1e28;
+  --surface3: #222636;
+  --border: #2a2f40;
+  --border2: #363d54;
+  --text: #e8eaf0;
+  --muted: #7a82a0;
+  --dim: #4a5068;
+  --accent: #5b8dee;
+  --accent2: #7c5be8;
+  --green: #3ecf8e;
+  --red: #f06a6a;
+  --amber: #f0b429;
+  --purple: #b97cf3;
+  --cyan: #38bdf8;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Sora', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, #0d0f14 0%, #131826 50%, #0f1420 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 32px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(91,141,238,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: 20%;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(124,91,232,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header-inner { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+.header-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(91,141,238,0.12); border: 1px solid rgba(91,141,238,0.3);
+  color: var(--accent); font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px; margin-bottom: 12px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.header h1 {
+  font-size: clamp(22px, 4vw, 32px); font-weight: 700; line-height: 1.2;
+  background: linear-gradient(135deg, #e8eaf0 0%, #a0aac0 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header p { color: var(--muted); font-size: 14px; margin-top: 6px; font-weight: 300; }
+
+/* ── Navigation ── */
+.nav-wrap { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.nav { display: flex; max-width: 900px; margin: 0 auto; padding: 0 16px; overflow-x: auto; }
+.nav-btn {
+  background: none; border: none; color: var(--muted); font-family: var(--sans);
+  font-size: 13px; font-weight: 500; padding: 14px 18px; cursor: pointer;
+  border-bottom: 2px solid transparent; white-space: nowrap;
+  transition: color .2s, border-color .2s; letter-spacing: .02em;
+}
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.nav-btn .nav-icon { margin-right: 6px; }
+
+/* ── Layout ── */
+.content { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+.section { display: none; animation: fadeUp .3s ease; }
+.section.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.card-title .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+.card p { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 8px; }
+.card p:last-child { margin-bottom: 0; }
+
+/* ── Code blocks ── */
+pre {
+  background: #080a0f;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-x: auto;
+  margin: 10px 0;
+  position: relative;
+}
+code { font-family: var(--mono); font-size: 12px; }
+.kw { color: #7c5be8; font-weight: 600; }
+.tp { color: #5b8dee; }
+.fn { color: #3ecf8e; }
+.str { color: #f0b429; }
+.num { color: #38bdf8; }
+.cm { color: #4a5068; font-style: italic; }
+.pp { color: #f06a6a; }
+.op { color: #a0aac0; }
+
+/* ── Alerts ── */
+.alert {
+  border-radius: 8px; padding: 10px 14px; margin: 10px 0;
+  font-size: 12px; line-height: 1.6; font-weight: 400;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+.alert-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+.alert-warn { background: rgba(240,180,41,0.08); border: 1px solid rgba(240,180,41,0.25); color: #f0b429; }
+.alert-danger { background: rgba(240,106,106,0.08); border: 1px solid rgba(240,106,106,0.25); color: #f06a6a; }
+.alert-tip { background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.25); color: #3ecf8e; }
+.alert-info { background: rgba(91,141,238,0.08); border: 1px solid rgba(91,141,238,0.25); color: var(--accent); }
+
+/* ── Grid ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media(max-width: 580px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* ── Table ── */
+.tbl-wrap { overflow-x: auto; margin: 10px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { background: var(--surface2); color: var(--muted); font-weight: 600;
+     padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+td:first-child { font-family: var(--mono); color: var(--cyan); font-size: 11px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+
+/* ── Tags ── */
+.tag {
+  display: inline-block; font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px; letter-spacing: .05em; margin: 2px;
+}
+.tag-blue { background: rgba(91,141,238,0.15); color: var(--accent); border: 1px solid rgba(91,141,238,0.3); }
+.tag-green { background: rgba(62,207,142,0.12); color: var(--green); border: 1px solid rgba(62,207,142,0.3); }
+.tag-amber { background: rgba(240,180,41,0.12); color: var(--amber); border: 1px solid rgba(240,180,41,0.3); }
+.tag-red { background: rgba(240,106,106,0.12); color: var(--red); border: 1px solid rgba(240,106,106,0.3); }
+.tag-purple { background: rgba(185,124,243,0.12); color: var(--purple); border: 1px solid rgba(185,124,243,0.3); }
+.tag-cyan { background: rgba(56,189,248,0.12); color: var(--cyan); border: 1px solid rgba(56,189,248,0.3); }
+
+/* ── Section headers ── */
+.section-header { margin-bottom: 20px; }
+.section-header h2 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.section-header p { font-size: 13px; color: var(--muted); }
+.section-header .accent-line { width: 36px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); margin-bottom: 10px; }
+
+/* ── Callout box ── */
+.callout {
+  background: var(--surface2); border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0;
+  font-size: 12px; color: var(--muted);
+}
+.callout strong { color: var(--text); }
+
+/* ── Memory diagram ── */
+.mem-row { display: flex; gap: 0; margin: 10px 0; font-family: var(--mono); font-size: 11px; }
+.mem-cell {
+  border: 1px solid var(--border2); padding: 8px 10px; text-align: center;
+  min-width: 46px; background: var(--surface2);
+}
+.mem-cell.null-byte { background: rgba(240,106,106,0.1); border-color: rgba(240,106,106,0.4); color: var(--red); }
+.mem-cell.highlight { background: rgba(91,141,238,0.12); border-color: rgba(91,141,238,0.4); color: var(--accent); }
+.mem-idx { color: var(--dim); font-size: 10px; margin-top: 3px; }
+
+/* ── QUIZ ── */
+.quiz-header { text-align: center; padding: 24px 0 20px; }
+.quiz-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.quiz-header p { font-size: 13px; color: var(--muted); }
+
+.quiz-progress { margin-bottom: 24px; }
+.progress-bar { background: var(--surface2); border-radius: 4px; height: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; transition: width .4s ease; }
+.progress-text { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; justify-content: space-between; }
+
+.quiz-question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.q-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.q-num { font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--mono); }
+.q-cat { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing:.04em; }
+.q-text {
+  font-size: 14px; font-weight: 500; color: var(--text);
+  margin-bottom: 18px; line-height: 1.6;
+}
+.q-code { font-family: var(--mono); font-size: 12px; }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.opt-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 16px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.opt-btn:hover:not(:disabled) { border-color: var(--border2); color: var(--text); background: var(--surface3); }
+.opt-btn:disabled { cursor: default; }
+.opt-btn.correct { background: rgba(62,207,142,0.1); border-color: rgba(62,207,142,0.5); color: var(--green); }
+.opt-btn.wrong { background: rgba(240,106,106,0.1); border-color: rgba(240,106,106,0.5); color: var(--red); }
+.opt-letter {
+  width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 1px;
+  color: var(--dim);
+}
+.opt-btn.correct .opt-letter { background: var(--green); border-color: var(--green); color: #000; }
+.opt-btn.wrong .opt-letter { background: var(--red); border-color: var(--red); color: #fff; }
+
+.explanation {
+  background: var(--surface2); border-radius: 8px; padding: 12px 14px;
+  margin-top: 12px; font-size: 12px; color: var(--muted); line-height: 1.6;
+  border-left: 3px solid var(--accent); display: none;
+}
+.explanation.show { display: block; }
+.explanation strong { color: var(--text); }
+
+.quiz-nav { display: flex; justify-content: flex-end; margin-top: 16px; }
+.btn-next {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 8px; padding: 10px 22px;
+  color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s; display: none;
+}
+.btn-next:hover { opacity: .88; }
+
+/* Results */
+.results { text-align: center; padding: 32px 20px; }
+.score-ring { 
+  width: 120px; height: 120px; margin: 0 auto 20px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; position: relative;
+}
+.score-ring svg { position: absolute; top:0;left:0;width:100%;height:100%; transform:rotate(-90deg); }
+.score-ring .score-text { position: relative; z-index:1; }
+.results h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.results p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+.result-breakdown { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 20px 0; }
+.rb-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.rb-num { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+.rb-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing:.05em; }
+.btn-restart {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--sans); font-size: 13px; font-weight: 600;
+  padding: 10px 24px; border-radius: 8px; cursor: pointer; margin-top: 8px;
+  transition: border-color .2s;
+}
+.btn-restart:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-badge">📚 Exam Prep</div>
+    <h1>C Programming Review</h1>
+    <p>Strings · Enumerations · Unions — Complete coverage for your exam</p>
+  </div>
+</div>
+
+<div class="nav-wrap">
+  <nav class="nav">
+    <button class="nav-btn active" onclick="show('strings')"><span class="nav-icon">🔤</span>Strings</button>
+    <button class="nav-btn" onclick="show('enums')"><span class="nav-icon">🏷️</span>Enums</button>
+    <button class="nav-btn" onclick="show('unions')"><span class="nav-icon">🔀</span>Unions</button>
+    <button class="nav-btn" onclick="show('compare')"><span class="nav-icon">⚖️</span>Comparison</button>
+    <button class="nav-btn" onclick="show('quiz')"><span class="nav-icon">🧪</span>Quiz (20 Qs)</button>
+  </nav>
+</div>
+
+<div class="content">
+
+<!-- ═══════════════════════════ STRINGS ═══════════════════════════ -->
+<div class="section active" id="strings">
+  <div class="section-header">
+    <div class="accent-line"></div>
+    <h2>Strings in C</h2>
+    <p>A C string is a null-terminated array of <code>char</code>. Understanding how they work in memory is essential.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--cyan)"></div>What is a String?</div>
+    <p>C has no built-in string type. A string is simply a <strong>char array</strong> where the last element is the null character <code>'\0'</code> (ASCII 0). Every standard library function depends on this sentinel to know where the string ends.</p>
+    <div class="alert alert-danger"><span class="alert-icon">⚠️</span><span>A char array WITHOUT <code>'\0'</code> is NOT a string — using it with string functions causes undefined behavior.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Memory Layout</div>
+    <p>How <code>"Hello"</code> lives in memory (6 bytes, not 5):</p>
+    <div class="mem-row">
+      <div><div class="mem-cell highlight">'H'</div><div class="mem-idx">[0]</div></div>
+      <div><div class="mem-cell">'e'</div><div class="mem-idx">[1]</div></div>
+      <div><div class="mem-cell">'l'</div><div class="mem-idx">[2]</div></div>
+      <div><div class="mem-cell">'l'</div><div class="mem-idx">[3]</div></div>
+      <div><div class="mem-cell">'o'</div><div class="mem-idx">[4]</div></div>
+      <div><div class="mem-cell null-byte">'\0'</div><div class="mem-idx">[5]</div></div>
+    </div>
+    <p style="margin-top:8px"><code>sizeof("Hello") = 6</code> &nbsp;·&nbsp; <code>strlen("Hello") = 5</code></p>
+    <div class="alert alert-info"><span class="alert-icon">💡</span><span><strong>sizeof</strong> includes the null terminator. <strong>strlen</strong> counts only visible characters.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Declaration & Initialization</div>
+<pre><span class="cm">/* 1. Array — modifiable, size auto-calculated (=6) */</span>
+<span class="tp">char</span> name[] = <span class="str">"Alice"</span>;
+
+<span class="cm">/* 2. Array with explicit size — extra bytes zero-filled */</span>
+<span class="tp">char</span> name[<span class="num">50</span>] = <span class="str">"Alice"</span>;
+
+<span class="cm">/* 3. Pointer to string literal — READ ONLY, do not modify! */</span>
+<span class="kw">const</span> <span class="tp">char</span> *name = <span class="str">"Alice"</span>;
+
+<span class="cm">/* 4. Manual character-by-character (must add '\0' yourself) */</span>
+<span class="tp">char</span> name[] = {<span class="str">'A'</span>,<span class="str">'l'</span>,<span class="str">'i'</span>,<span class="str">'c'</span>,<span class="str">'e'</span>,<span class="str">'\0'</span>};
+
+<span class="cm">/* 5. Uninitialized — must fill before use */</span>
+<span class="tp">char</span> buf[<span class="num">100</span>];</pre>
+    <div class="alert alert-danger"><span class="alert-icon">🚫</span><span>Modifying a string literal (<code>char *p = "Hi"; p[0] = 'X';</code>) is <strong>undefined behavior</strong> — use a char array instead.</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--amber)"></div>Reading Strings</div>
+<pre><span class="tp">char</span> buf[<span class="num">50</span>];
+
+<span class="cm">/* scanf — stops at whitespace */</span>
+<span class="fn">scanf</span>(<span class="str">"%49s"</span>, buf);
+
+<span class="cm">/* fgets — reads full line */</span>
+<span class="fn">fgets</span>(buf, <span class="kw">sizeof</span>(buf), stdin);
+
+<span class="cm">/* Strip newline from fgets */</span>
+buf[<span class="fn">strcspn</span>(buf, <span class="str">"\n"</span>)] = <span class="str">'\0'</span>;</pre>
+      <div class="alert alert-danger"><span class="alert-icon">🚫</span><span>Never use <code>gets()</code> — no bounds check, removed in C11.</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--green)"></div>String Traversal</div>
+<pre><span class="tp">char</span> str[] = <span class="str">"Hello"</span>;
+
+<span class="cm">/* Index-based */</span>
+<span class="kw">for</span> (<span class="tp">int</span> i = <span class="num">0</span>; str[i] != <span class="str">'\0'</span>; i++)
+    <span class="fn">putchar</span>(str[i]);
+
+<span class="cm">/* Pointer-based (idiomatic C) */</span>
+<span class="kw">for</span> (<span class="tp">char</span> *p = str; *p; p++)
+    <span class="fn">putchar</span>(*p);
+
+<span class="cm">/* Reverse string */</span>
+<span class="tp">int</span> l=<span class="num">0</span>, r=<span class="fn">strlen</span>(str)-<span class="num">1</span>;
+<span class="kw">while</span>(l &lt; r) {
+    <span class="tp">char</span> t=str[l]; str[l++]=str[r]; str[r--]=t;
+}</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot"></div>Essential String Functions — <code>&lt;string.h&gt;</code></div>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Function</th><th>Purpose</th><th>Return</th><th>Safe?</th></tr>
+      <tr><td>strlen(s)</td><td>Length (excluding '\0')</td><td>size_t</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>strcpy(dst, src)</td><td>Copy src into dst</td><td>dst pointer</td><td><span class="tag tag-red">⚠</span></td></tr>
+      <tr><td>strncpy(dst, src, n)</td><td>Copy at most n chars</td><td>dst pointer</td><td><span class="tag tag-amber">~</span></td></tr>
+      <tr><td>strcat(dst, src)</td><td>Append src to dst</td><td>dst pointer</td><td><span class="tag tag-red">⚠</span></td></tr>
+      <tr><td>strncat(dst, src, n)</td><td>Append at most n chars</td><td>dst pointer</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>strcmp(a, b)</td><td>Compare: 0 if equal, &lt;0 or &gt;0</td><td>int</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>strncmp(a, b, n)</td><td>Compare first n chars</td><td>int</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>strchr(s, c)</td><td>Find first occurrence of char c</td><td>char* or NULL</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>strrchr(s, c)</td><td>Find last occurrence of char c</td><td>char* or NULL</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>strstr(hay, needle)</td><td>Find substring</td><td>char* or NULL</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>sprintf(buf, fmt, …)</td><td>Format string into buffer</td><td>int (chars written)</td><td><span class="tag tag-red">⚠</span></td></tr>
+      <tr><td>snprintf(buf, n, fmt, …)</td><td>Format with length limit</td><td>int (chars written)</td><td><span class="tag tag-green">✓</span></td></tr>
+      <tr><td>strtok(str, delim)</td><td>Tokenize string</td><td>char* or NULL</td><td><span class="tag tag-amber">~</span></td></tr>
+      <tr><td>atoi(s) / atof(s)</td><td>String to int / float</td><td>int / double</td><td><span class="tag tag-amber">~</span></td></tr>
+    </table>
+    </div>
+    <div class="alert alert-warn"><span class="alert-icon">⚡</span><span><code>strtok</code> modifies the original string and is not thread-safe. <code>strncpy</code> does NOT guarantee null termination if src ≥ n chars.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--red)"></div>Common Mistakes (Exam Traps)</div>
+    <div class="grid2">
+      <div>
+        <p><strong style="color:var(--red)">❌ Wrong — comparing with ==</strong></p>
+<pre><span class="kw">if</span> (s1 == s2)  <span class="cm">// compares addresses!</span></pre>
+        <p><strong style="color:var(--green)">✅ Correct</strong></p>
+<pre><span class="kw">if</span> (<span class="fn">strcmp</span>(s1, s2) == <span class="num">0</span>)</pre>
+      </div>
+      <div>
+        <p><strong style="color:var(--red)">❌ Wrong — overflow</strong></p>
+<pre><span class="tp">char</span> s[<span class="num">5</span>] = <span class="str">"Hello"</span>; <span class="cm">// no '\0'!</span></pre>
+        <p><strong style="color:var(--green)">✅ Correct</strong></p>
+<pre><span class="tp">char</span> s[<span class="num">6</span>] = <span class="str">"Hello"</span>; <span class="cm">// len+1</span></pre>
+      </div>
+      <div>
+        <p><strong style="color:var(--red)">❌ Wrong — modifying literal</strong></p>
+<pre><span class="tp">char</span> *p = <span class="str">"Hi"</span>; p[<span class="num">0</span>] = <span class="str">'X'</span>; <span class="cm">// UB!</span></pre>
+        <p><strong style="color:var(--green)">✅ Correct</strong></p>
+<pre><span class="tp">char</span> p[] = <span class="str">"Hi"</span>; p[<span class="num">0</span>] = <span class="str">'X'</span>; <span class="cm">// OK</span></pre>
+      </div>
+      <div>
+        <p><strong style="color:var(--red)">❌ Wrong — assignment</strong></p>
+<pre><span class="tp">char</span> s[<span class="num">10</span>]; s = <span class="str">"Hello"</span>; <span class="cm">// error!</span></pre>
+        <p><strong style="color:var(--green)">✅ Correct</strong></p>
+<pre><span class="fn">strcpy</span>(s, <span class="str">"Hello"</span>); <span class="cm">// use strcpy</span></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ ENUMS ═══════════════════════════ -->
+<div class="section" id="enums">
+  <div class="section-header">
+    <div class="accent-line" style="background:linear-gradient(90deg,var(--purple),var(--accent2))"></div>
+    <h2>Enumerations (enum)</h2>
+    <p>Named integer constants that make code self-documenting and eliminate magic numbers.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--purple)"></div>What is an Enum?</div>
+    <p>An enum is a user-defined type whose values are symbolic names for integers. By default, values start at 0 and increment. Under the hood, they are just <code>int</code>.</p>
+<pre><span class="cm">/* Declaration */</span>
+<span class="kw">enum</span> <span class="tp">Day</span> { MON, TUE, WED, THU, FRI, SAT, SUN };
+<span class="cm">// MON=0  TUE=1  WED=2  THU=3  FRI=4  SAT=5  SUN=6</span>
+
+<span class="cm">/* Usage */</span>
+<span class="kw">enum</span> <span class="tp">Day</span> today = WED;
+<span class="fn">printf</span>(<span class="str">"Day number: %d\n"</span>, today); <span class="cm">// prints 2</span>
+
+<span class="cm">/* typedef for cleaner usage (no 'enum' keyword) */</span>
+<span class="kw">typedef enum</span> { MON, TUE, WED, THU, FRI, SAT, SUN } <span class="tp">Day</span>;
+<span class="tp">Day</span> today = WED;</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Custom Values</div>
+    <p>You can assign specific integer values. Subsequent values continue incrementing from the last set value.</p>
+<pre><span class="kw">enum</span> <span class="tp">HTTPStatus</span> {
+    OK          = <span class="num">200</span>,
+    CREATED     = <span class="num">201</span>,
+    BAD_REQUEST = <span class="num">400</span>,
+    UNAUTHORIZED= <span class="num">401</span>,
+    NOT_FOUND   = <span class="num">404</span>,
+    SERVER_ERROR= <span class="num">500</span>
+};
+
+<span class="kw">enum</span> <span class="tp">Flags</span> {
+    READ    = <span class="num">1</span>,   <span class="cm">// 001</span>
+    WRITE   = <span class="num">2</span>,   <span class="cm">// 010</span>
+    EXECUTE = <span class="num">4</span>    <span class="cm">// 100  (powers of 2 for bit flags)</span>
+};
+
+<span class="kw">enum</span> <span class="tp">Color</span> { RED=<span class="num">5</span>, GREEN, BLUE }; <span class="cm">// GREEN=6, BLUE=7</span></pre>
+    <div class="alert alert-info"><span class="alert-icon">💡</span><span>Multiple enum constants CAN have the same value. Two names for the same number is valid C.</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Enum in switch</div>
+<pre><span class="kw">enum</span> <span class="tp">Season</span> { SPRING, SUMMER, AUTUMN, WINTER };
+
+<span class="kw">void</span> <span class="fn">describe</span>(<span class="kw">enum</span> <span class="tp">Season</span> s) {
+    <span class="kw">switch</span>(s) {
+        <span class="kw">case</span> SPRING: <span class="fn">puts</span>(<span class="str">"Warm"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> SUMMER: <span class="fn">puts</span>(<span class="str">"Hot"</span>);  <span class="kw">break</span>;
+        <span class="kw">case</span> AUTUMN: <span class="fn">puts</span>(<span class="str">"Cool"</span>); <span class="kw">break</span>;
+        <span class="kw">case</span> WINTER: <span class="fn">puts</span>(<span class="str">"Cold"</span>); <span class="kw">break</span>;
+    }
+}</pre>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Enums as Bit Flags</div>
+<pre><span class="kw">enum</span> <span class="tp">Permission</span> {
+    NONE    = <span class="num">0</span>,
+    READ    = <span class="num">1</span> &lt;&lt; <span class="num">0</span>,  <span class="cm">// 1</span>
+    WRITE   = <span class="num">1</span> &lt;&lt; <span class="num">1</span>,  <span class="cm">// 2</span>
+    EXECUTE = <span class="num">1</span> &lt;&lt; <span class="num">2</span>   <span class="cm">// 4</span>
+};
+
+<span class="tp">int</span> perm = READ | WRITE; <span class="cm">// 3</span>
+
+<span class="kw">if</span> (perm &amp; READ)
+    <span class="fn">puts</span>(<span class="str">"Can read"</span>);
+
+perm |= EXECUTE;   <span class="cm">// add flag</span>
+perm &amp;= ~WRITE;    <span class="cm">// remove flag</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Key Properties & Gotchas</div>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Property</th><th>Details</th></tr>
+      <tr><td>Underlying type</td><td>Implementation-defined integer (usually <code>int</code>). Not guaranteed to be any specific size.</td></tr>
+      <tr><td>Type safety</td><td>C does NOT enforce type safety — you can assign any int to an enum variable without warning.</td></tr>
+      <tr><td>Scope</td><td>Enum constants are in the enclosing scope (not namespaced to the enum tag).</td></tr>
+      <tr><td>No string conversion</td><td>C has no built-in way to print the name of an enum — you must write a lookup yourself.</td></tr>
+      <tr><td>Forward declaration</td><td>Allowed: <code>enum Color;</code> (but you can't use it until fully defined)</td></tr>
+    </table>
+    </div>
+<pre><span class="cm">/* Printing enum name — manual lookup */</span>
+<span class="kw">const</span> <span class="tp">char</span> *dayNames[] = {<span class="str">"Mon"</span>,<span class="str">"Tue"</span>,<span class="str">"Wed"</span>,<span class="str">"Thu"</span>,<span class="str">"Fri"</span>,<span class="str">"Sat"</span>,<span class="str">"Sun"</span>};
+<span class="kw">enum</span> <span class="tp">Day</span> d = WED;
+<span class="fn">printf</span>(<span class="str">"%s\n"</span>, dayNames[d]); <span class="cm">// "Wed"</span>
+
+<span class="cm">/* Enum in struct */</span>
+<span class="kw">typedef struct</span> {
+    <span class="tp">char</span> name[<span class="num">50</span>];
+    <span class="kw">enum</span> <span class="tp">Day</span> day;
+} <span class="tp">Appointment</span>;</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--red)"></div>Enum Traps (Exam Traps)</div>
+    <div class="alert alert-warn"><span class="alert-icon">⚡</span><span>Comparing enums from different types compiles fine in C — there's no type check. Always compare values, not names, since constants from different enums can share the same integer value.</span></div>
+<pre><span class="cm">/* Enum values are globally scoped — name conflicts! */</span>
+<span class="kw">enum</span> <span class="tp">A</span> { X = <span class="num">1</span> };
+<span class="kw">enum</span> <span class="tp">B</span> { X = <span class="num">2</span> }; <span class="cm">// ERROR: 'X' redefined</span>
+
+<span class="cm">/* No automatic bounds checking */</span>
+<span class="kw">enum</span> <span class="tp">Color</span> { RED, GREEN, BLUE };
+<span class="kw">enum</span> <span class="tp">Color</span> c = (<span class="kw">enum</span> <span class="tp">Color</span>)<span class="num">99</span>; <span class="cm">// compiles, UB territory</span>
+
+<span class="cm">/* sizeof enum = sizeof int (typically) */</span>
+<span class="fn">printf</span>(<span class="str">"%zu\n"</span>, <span class="kw">sizeof</span>(<span class="kw">enum</span> <span class="tp">Day</span>)); <span class="cm">// usually 4</span></pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ UNIONS ═══════════════════════════ -->
+<div class="section" id="unions">
+  <div class="section-header">
+    <div class="accent-line" style="background:linear-gradient(90deg,var(--green),var(--cyan))"></div>
+    <h2>Unions</h2>
+    <p>A union stores different data types in the <strong>same memory location</strong> — only one member is valid at a time.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--green)"></div>What is a Union?</div>
+    <p>A <code>union</code> is like a struct where all members share the same memory. The size equals the <strong>largest member</strong>. Writing to one member overwrites all others.</p>
+<pre><span class="kw">union</span> <span class="tp">Data</span> {
+    <span class="tp">int</span>   i;    <span class="cm">// 4 bytes</span>
+    <span class="tp">float</span> f;    <span class="cm">// 4 bytes</span>
+    <span class="tp">char</span>  c;    <span class="cm">// 1 byte</span>
+};              <span class="cm">// sizeof(Data) = 4 (largest member)</span>
+
+<span class="kw">union</span> <span class="tp">Data</span> d;
+d.i = <span class="num">42</span>;
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, d.i);   <span class="cm">// OK: 42</span>
+d.f = <span class="num">3.14f</span>;
+<span class="fn">printf</span>(<span class="str">"%d\n"</span>, d.i);   <span class="cm">// reading d.i now is UB!</span></pre>
+    <div class="alert alert-danger"><span class="alert-icon">🚫</span><span>Reading from a union member that wasn't the last one written is <strong>undefined behavior</strong> (except for type-punning in certain compilers).</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--green)"></div>Union Memory Layout</div>
+    <p>All members start at the same address and overlap:</p>
+<pre><span class="cm">/* union Data — members overlap in memory */</span>
+<span class="cm">/*
+Address:  [0x100]  [0x101]  [0x102]  [0x103]
+int i:   [   byte0    byte1    byte2    byte3   ]
+float f: [   byte0    byte1    byte2    byte3   ]
+char c:  [  byte0  ]
+                  ^  all start at same address  ^
+*/</span>
+
+<span class="kw">union</span> <span class="tp">Mix</span> { <span class="tp">int</span> i; <span class="tp">double</span> d; <span class="tp">char</span> s[<span class="num">20</span>]; };
+<span class="fn">printf</span>(<span class="str">"%zu\n"</span>, <span class="kw">sizeof</span>(<span class="kw">union</span> <span class="tp">Mix</span>)); <span class="cm">// 20 (char[20] is largest)</span></pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--green)"></div>Tagged Union — The Right Way</div>
+    <p>Use a struct with an enum "tag" to track which member is currently valid:</p>
+<pre><span class="kw">typedef enum</span> { INT_VAL, FLOAT_VAL, STR_VAL } <span class="tp">ValueType</span>;
+
+<span class="kw">typedef struct</span> {
+    <span class="tp">ValueType</span> type;   <span class="cm">// tag: which member is active</span>
+    <span class="kw">union</span> {
+        <span class="tp">int</span>   i;
+        <span class="tp">float</span> f;
+        <span class="tp">char</span>  s[<span class="num">64</span>];
+    } val;
+} <span class="tp">Value</span>;
+
+<span class="cm">/* Writing */</span>
+<span class="tp">Value</span> v;
+v.type = FLOAT_VAL;
+v.val.f = <span class="num">3.14f</span>;
+
+<span class="cm">/* Reading safely */</span>
+<span class="kw">switch</span>(v.type) {
+    <span class="kw">case</span> INT_VAL:   <span class="fn">printf</span>(<span class="str">"int: %d\n"</span>,   v.val.i); <span class="kw">break</span>;
+    <span class="kw">case</span> FLOAT_VAL: <span class="fn">printf</span>(<span class="str">"float: %f\n"</span>, v.val.f); <span class="kw">break</span>;
+    <span class="kw">case</span> STR_VAL:   <span class="fn">printf</span>(<span class="str">"str: %s\n"</span>,   v.val.s); <span class="kw">break</span>;
+}</pre>
+    <div class="alert alert-tip"><span class="alert-icon">✅</span><span>Tagged unions are the standard safe pattern. Always track what the active member is via a separate tag field.</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--green)"></div>Union vs Struct Size</div>
+<pre><span class="kw">struct</span> <span class="tp">S</span> { <span class="tp">int</span> a; <span class="tp">float</span> b; <span class="tp">char</span> c; };
+<span class="kw">union</span>  <span class="tp">U</span> { <span class="tp">int</span> a; <span class="tp">float</span> b; <span class="tp">char</span> c; };
+
+<span class="cm">/* struct: members laid out sequentially
+   + padding for alignment
+   sizeof(S) = typically 12 */</span>
+
+<span class="cm">/* union: all share same memory
+   sizeof(U) = sizeof largest = 4 */</span></pre>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--cyan)"></div>Type Punning</div>
+<pre><span class="cm">/* Inspect float bit pattern */</span>
+<span class="kw">union</span> <span class="tp">FloatBits</span> {
+    <span class="tp">float</span>        f;
+    <span class="tp">unsigned int</span> bits;
+};
+
+<span class="kw">union</span> <span class="tp">FloatBits</span> fb;
+fb.f = <span class="num">1.0f</span>;
+<span class="fn">printf</span>(<span class="str">"%08X\n"</span>, fb.bits);
+<span class="cm">// 3F800000 (IEEE 754 for 1.0)</span>
+
+<span class="cm">/* GCC allows this, C standard is UB.
+   memcpy is the portable alternative. */</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--green)"></div>Union Initialization</div>
+<pre><span class="kw">union</span> <span class="tp">Data</span> { <span class="tp">int</span> i; <span class="tp">float</span> f; <span class="tp">char</span> c; };
+
+<span class="cm">/* Only FIRST member can be initialized with {} */</span>
+<span class="kw">union</span> <span class="tp">Data</span> d1 = { <span class="num">42</span> };       <span class="cm">// d1.i = 42</span>
+
+<span class="cm">/* C99 designated initializer — any member */</span>
+<span class="kw">union</span> <span class="tp">Data</span> d2 = { .f = <span class="num">3.14f</span> }; <span class="cm">// d2.f = 3.14</span>
+<span class="kw">union</span> <span class="tp">Data</span> d3 = { .c = <span class="str">'X'</span> };   <span class="cm">// d3.c = 'X'</span></pre>
+    <div class="alert alert-info"><span class="alert-icon">💡</span><span>Without designated initializers (C89), only the first member can be initialized at declaration.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--red)"></div>Union Gotchas (Exam Traps)</div>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Gotcha</th><th>Explanation</th></tr>
+      <tr><td>Size = largest member</td><td>Not the sum. sizeof always equals the largest member's size.</td></tr>
+      <tr><td>Only one active member</td><td>Reading the wrong member is undefined behavior.</td></tr>
+      <tr><td>Endianness matters</td><td>Type-punning via union exposes byte order — results differ on little vs big endian machines.</td></tr>
+      <tr><td>No constructor/destructor</td><td>C unions do not call any initialization — members start uninitialized unless explicitly set.</td></tr>
+      <tr><td>Alignment padding</td><td>The union size may be padded to satisfy the alignment of its largest member.</td></tr>
+    </table>
+    </div>
+<pre><span class="cm">/* Alignment padding example */</span>
+<span class="kw">union</span> <span class="tp">Padded</span> {
+    <span class="tp">char</span>   c;    <span class="cm">// 1 byte</span>
+    <span class="tp">double</span> d;    <span class="cm">// 8 bytes, alignment 8</span>
+};
+<span class="cm">// sizeof = 8 (padded for double's alignment)</span></pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ COMPARISON ═══════════════════════════ -->
+<div class="section" id="compare">
+  <div class="section-header">
+    <div class="accent-line" style="background:linear-gradient(90deg,var(--amber),var(--red))"></div>
+    <h2>Side-by-Side Comparison</h2>
+    <p>Quick reference — structs, unions, and enums compared for exam clarity.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--amber)"></div>struct vs union vs enum</div>
+    <div class="tbl-wrap">
+    <table>
+      <tr><th>Feature</th><th>struct</th><th>union</th><th>enum</th></tr>
+      <tr><td>Purpose</td><td>Group related data</td><td>Store ONE of multiple types</td><td>Named integer constants</td></tr>
+      <tr><td>Memory</td><td>Sum of members + padding</td><td>Size of LARGEST member</td><td>Size of int (typically)</td></tr>
+      <tr><td>Members</td><td>All active simultaneously</td><td>Only ONE active at a time</td><td>N/A (constants, not members)</td></tr>
+      <tr><td>Access</td><td>member.field or p->field</td><td>member.field or p->field</td><td>Just the constant name</td></tr>
+      <tr><td>Use case</td><td>Records, objects</td><td>Type variants, memory saving</td><td>State machines, flags, options</td></tr>
+      <tr><td>Initializer</td><td>{v1, v2, v3}</td><td>{v} or {.member = v}</td><td>= value in declaration</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--amber)"></div>Typedef Patterns</div>
+<pre><span class="cm">/* Struct typedef */</span>
+<span class="kw">typedef struct</span> { <span class="tp">int</span> x, y; } <span class="tp">Point</span>;
+<span class="tp">Point</span> p = {<span class="num">3</span>, <span class="num">4</span>};
+
+<span class="cm">/* Union typedef */</span>
+<span class="kw">typedef union</span> { <span class="tp">int</span> i; <span class="tp">float</span> f; } <span class="tp">Number</span>;
+<span class="tp">Number</span> n; n.i = <span class="num">10</span>;
+
+<span class="cm">/* Enum typedef */</span>
+<span class="kw">typedef enum</span> { RED, GREEN, BLUE } <span class="tp">Color</span>;
+<span class="tp">Color</span> c = GREEN;
+
+<span class="cm">/* Tagged union — combining all three */</span>
+<span class="kw">typedef enum</span>  { T_INT, T_FLOAT, T_STR }   <span class="tp">Tag</span>;
+<span class="kw">typedef union</span> { <span class="tp">int</span> i; <span class="tp">float</span> f; <span class="tp">char</span> s[<span class="num">32</span>]; } <span class="tp">Payload</span>;
+<span class="kw">typedef struct</span>{ <span class="tp">Tag</span> tag; <span class="tp">Payload</span> data; }   <span class="tp">Variant</span>;</pre>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--amber)"></div>sizeof Quick Reference</div>
+<pre><span class="cm">/* Given: */</span>
+<span class="kw">struct</span> <span class="tp">A</span> { <span class="tp">char</span> c; <span class="tp">int</span> i; };          <span class="cm">// typically 8 (4-byte alignment)</span>
+<span class="kw">union</span>  <span class="tp">B</span> { <span class="tp">char</span> c; <span class="tp">int</span> i; };          <span class="cm">// 4 (= sizeof(int))</span>
+<span class="kw">enum</span>   <span class="tp">C</span> { X, Y, Z };               <span class="cm">// typically 4 (= sizeof(int))</span>
+<span class="tp">char</span>      s[] = <span class="str">"Hi"</span>;               <span class="cm">// 3 (includes '\0')</span>
+<span class="kw">union</span>  <span class="tp">D</span> { <span class="tp">int</span> i; <span class="tp">char</span> s[<span class="num">10</span>]; };    <span class="cm">// 12 (10 padded to 4-byte align)</span></pre>
+    <div class="alert alert-warn"><span class="alert-icon">⚡</span><span>Struct and union sizes can include padding bytes. Always use <code>sizeof</code> — never manually add up member sizes.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="dot" style="background:var(--amber)"></div>Practical Pattern — State Machine with Enum</div>
+<pre><span class="kw">typedef enum</span> { IDLE, RUNNING, PAUSED, STOPPED } <span class="tp">State</span>;
+
+<span class="kw">typedef struct</span> {
+    <span class="tp">State</span>   state;
+    <span class="tp">char</span>    name[<span class="num">32</span>];
+    <span class="tp">int</span>     counter;
+} <span class="tp">Process</span>;
+
+<span class="kw">void</span> <span class="fn">transition</span>(<span class="tp">Process</span> *p, <span class="tp">State</span> next) {
+    <span class="kw">switch</span>(p->state) {
+        <span class="kw">case</span> IDLE:    <span class="kw">if</span>(next==RUNNING) p->state=RUNNING; <span class="kw">break</span>;
+        <span class="kw">case</span> RUNNING: <span class="kw">if</span>(next==PAUSED||next==STOPPED) p->state=next; <span class="kw">break</span>;
+        <span class="kw">case</span> PAUSED:  <span class="kw">if</span>(next==RUNNING||next==STOPPED) p->state=next; <span class="kw">break</span>;
+        <span class="kw">default</span>: <span class="kw">break</span>;
+    }
+}</pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ QUIZ ═══════════════════════════ -->
+<div class="section" id="quiz">
+  <div class="quiz-header">
+    <h2>🧪 Exam Practice Quiz</h2>
+    <p>20 exam-style questions covering strings, enums, and unions</p>
+  </div>
+
+  <div id="quiz-container"></div>
+  <div id="quiz-results" style="display:none"></div>
+</div>
+
+</div><!-- end .content -->
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ─── QUIZ DATA ───
+const questions = [
+  {
+    cat: 'Strings', catColor: 'tag-cyan',
+    q: 'What is the size of <code class="q-code">char s[] = "Hello";</code> in bytes?',
+    opts: ['5', '6', '4', 'Compiler-dependent'],
+    ans: 1,
+    exp: '<strong>6 bytes.</strong> "Hello" has 5 characters plus the null terminator \'\\0\' at index [5]. sizeof includes the null byte; strlen does not.'
+  },
+  {
+    cat: 'Strings', catColor: 'tag-cyan',
+    q: 'Which function should you use to safely compare two strings in C?',
+    opts: ['== operator', 'memcmp()', 'strcmp()', 'strequal()'],
+    ans: 2,
+    exp: '<strong>strcmp()</strong>. Using == compares pointers (addresses), not content. strcmp returns 0 if strings are equal, negative if s1 < s2, positive if s1 > s2.'
+  },
+  {
+    cat: 'Strings', catColor: 'tag-cyan',
+    q: 'What does <code class="q-code">strncpy(dst, src, n)</code> do if <code class="q-code">strlen(src) &lt; n</code>?',
+    opts: ['Copies n chars and stops', 'Pads remaining bytes with \'\\0\'', 'Returns an error', 'Copies until \'\\0\' only'],
+    ans: 1,
+    exp: '<strong>Pads with \'\\0\'.</strong> If src is shorter than n, strncpy fills the remaining bytes with null characters. However, if strlen(src) >= n, the result may NOT be null-terminated!'
+  },
+  {
+    cat: 'Strings', catColor: 'tag-cyan',
+    q: 'What does the following print?\n<pre style="margin:10px 0"><span class="kw">char</span> *p = "Hello";\np[0] = \'h\';\nprintf("%s", p);</pre>',
+    opts: ['"hello"', '"Hello"', 'Undefined behavior / crash', 'Compilation error'],
+    ans: 2,
+    exp: '<strong>Undefined behavior.</strong> String literals are stored in read-only memory. Modifying them is UB. Use <code>char p[] = "Hello";</code> (array, not pointer) to get a modifiable copy.'
+  },
+  {
+    cat: 'Strings', catColor: 'tag-cyan',
+    q: 'Which function reads a full line including spaces from stdin safely?',
+    opts: ['scanf("%s", buf)', 'gets(buf)', 'fgets(buf, SIZE, stdin)', 'getchar()'],
+    ans: 2,
+    exp: '<strong>fgets().</strong> scanf("%s") stops at whitespace. gets() has no bounds check (removed in C11). fgets reads up to SIZE-1 chars and always null-terminates.'
+  },
+  {
+    cat: 'Strings', catColor: 'tag-cyan',
+    q: 'What does <code class="q-code">strchr("Hello", \'l\')</code> return?',
+    opts: ['Index 2', 'Pointer to first \'l\'', 'Number of \'l\' occurrences', 'NULL if not found, index if found'],
+    ans: 1,
+    exp: '<strong>Pointer to the first \'l\'.</strong> strchr returns a pointer to the first occurrence of the character in the string, or NULL if not found. Not an index!'
+  },
+  {
+    cat: 'Strings', catColor: 'tag-cyan',
+    q: 'What is the output of: <code class="q-code">printf("%d", strlen("\\0Hi"));</code>',
+    opts: ['3', '4', '0', '2'],
+    ans: 2,
+    exp: '<strong>0.</strong> \'\\0\' is the null terminator. strlen stops at the first null byte. "\\0Hi" starts with \'\\0\', so strlen sees an empty string and returns 0.'
+  },
+  {
+    cat: 'Enums', catColor: 'tag-purple',
+    q: 'What is the value of <code class="q-code">BLUE</code> in: <code class="q-code">enum Color { RED=5, GREEN, BLUE };</code>?',
+    opts: ['2', '6', '7', '5'],
+    ans: 2,
+    exp: '<strong>7.</strong> RED=5, then GREEN=6 (RED+1), then BLUE=7 (GREEN+1). After a custom value, subsequent values continue incrementing from it.'
+  },
+  {
+    cat: 'Enums', catColor: 'tag-purple',
+    q: 'What is the typical size of an enum variable in C?',
+    opts: ['1 byte', '2 bytes', 'sizeof(int) — typically 4 bytes', 'Depends on number of constants'],
+    ans: 2,
+    exp: '<strong>sizeof(int) — typically 4 bytes.</strong> In C, enums are implemented as integers. The exact size is implementation-defined but is usually the same as int (4 bytes on most modern platforms).'
+  },
+  {
+    cat: 'Enums', catColor: 'tag-purple',
+    q: 'What happens when you assign an out-of-range value to an enum variable?',
+    opts: ['Compilation error', 'Runtime error', 'It compiles — C does not enforce range', 'The value wraps around'],
+    ans: 2,
+    exp: '<strong>It compiles without error.</strong> C enums have no runtime bounds checking. You can assign any integer value to an enum variable. This is why tagged unions / validation are important.'
+  },
+  {
+    cat: 'Enums', catColor: 'tag-purple',
+    q: 'Can two enum constants in the same enum have the same value?',
+    opts: ['No — compilation error', 'Yes — allowed in C', 'Only in C99 and later', 'Only if using typedef'],
+    ans: 1,
+    exp: '<strong>Yes.</strong> C allows multiple enum constants to have the same integer value. Example: <code>enum { FALSE=0, NO=0, TRUE=1, YES=1 };</code> is valid.'
+  },
+  {
+    cat: 'Enums', catColor: 'tag-purple',
+    q: 'Which is the correct way to use enums as bit flags?',
+    opts: [
+      'enum F { A=1, B=2, C=3 }',
+      'enum F { A=1, B=2, C=4 } using powers of 2',
+      'enum F { A, B, C } — values auto-increment',
+      'Enums cannot be used as bit flags'
+    ],
+    ans: 1,
+    exp: '<strong>Powers of 2.</strong> For bit flags, each value must be a unique power of 2 (1, 2, 4, 8, 16…) so they can be OR\'d and AND\'d without overlapping bits. A=1(001), B=2(010), C=4(100).'
+  },
+  {
+    cat: 'Unions', catColor: 'tag-green',
+    q: 'Given <code class="q-code">union U { int i; double d; char c; };</code>, what is sizeof(U)?',
+    opts: ['13 bytes (sum of members)', '8 bytes (size of double)', '4 bytes (size of int)', '1 byte (size of char)'],
+    ans: 1,
+    exp: '<strong>8 bytes.</strong> A union\'s size equals the size of its LARGEST member. double is 8 bytes, which is larger than int (4) and char (1). The size may also be padded for alignment.'
+  },
+  {
+    cat: 'Unions', catColor: 'tag-green',
+    q: 'You write to <code class="q-code">u.i = 5</code>, then read <code class="q-code">u.f</code>. What happens?',
+    opts: ['u.f equals 5.0', 'The bit pattern of 5 is reinterpreted as float — undefined behavior', 'Compilation error', 'u.f equals 0'],
+    ans: 1,
+    exp: '<strong>Undefined behavior.</strong> Reading a union member other than the last one written is UB in standard C. The bits are reinterpreted in a type-unsafe way. Some compilers (GCC) do allow this as an extension.'
+  },
+  {
+    cat: 'Unions', catColor: 'tag-green',
+    q: 'What is the correct way to initialize a union to set the <code class="q-code">f</code> member (C99)?',
+    opts: [
+      'union U u = { 3.14f };',
+      'union U u = { f: 3.14f };',
+      'union U u = { .f = 3.14f };',
+      'union U u; u = 3.14f;'
+    ],
+    ans: 2,
+    exp: '<strong>Designated initializer: <code>{ .f = 3.14f }</code>.</strong> C99 introduced designated initializers for structs and unions. Without a designator, only the first member can be initialized.'
+  },
+  {
+    cat: 'Unions', catColor: 'tag-green',
+    q: 'What is the primary use case for a "tagged union"?',
+    opts: [
+      'To store multiple values simultaneously',
+      'To track which union member is currently valid',
+      'To increase performance of union access',
+      'To prevent memory alignment issues'
+    ],
+    ans: 1,
+    exp: '<strong>Track the active member.</strong> A tagged union pairs a union with an enum (the "tag") that records which member was last written. Reading the tag before accessing the union prevents undefined behavior.'
+  },
+  {
+    cat: 'Unions', catColor: 'tag-green',
+    q: 'How many members of a union can be active (validly readable) at the same time?',
+    opts: ['All members', 'Two members', 'Only one — the last written', 'Depends on the union size'],
+    ans: 2,
+    exp: '<strong>Only one — the last written.</strong> All members share the same memory. Writing to one overlaps and corrupts the data of all others. Only the member you last wrote to holds a valid value.'
+  },
+  {
+    cat: 'Mixed', catColor: 'tag-amber',
+    q: 'What does the following output?\n<pre style="margin:10px 0"><span class="kw">enum</span> E { A, B, C=5, D };\nprintf(<span class="str">"%d %d"</span>, B, D);</pre>',
+    opts: ['1 6', '1 5', '2 6', '0 6'],
+    ans: 0,
+    exp: '<strong>1 6.</strong> A=0, B=1, C=5 (explicit), D=6 (C+1). Subsequent values after a custom one increment from it.'
+  },
+  {
+    cat: 'Mixed', catColor: 'tag-amber',
+    q: 'Which statement about <code class="q-code">strtok</code> is TRUE?',
+    opts: [
+      'It does not modify the original string',
+      'It is thread-safe',
+      'It modifies the original string by inserting \'\\0\' at delimiters',
+      'You must call it with the original string each time'
+    ],
+    ans: 2,
+    exp: '<strong>strtok modifies the original string.</strong> It replaces each delimiter with \'\\0\'. For subsequent tokens, pass NULL as the first argument. It\'s NOT thread-safe — use strtok_r() for thread-safe tokenization.'
+  },
+  {
+    cat: 'Mixed', catColor: 'tag-amber',
+    q: 'Given a struct with a union inside: <code class="q-code">struct { int tag; union { int i; float f; } val; } x;</code> — if tag==1 means float is active, what is wrong with reading x.val.i when tag==1?',
+    opts: [
+      'Nothing — union members are always readable',
+      'It reads garbage: the float bits are reinterpreted as int (UB)',
+      'The compiler will generate an error',
+      'It returns 0 automatically'
+    ],
+    ans: 1,
+    exp: '<strong>Undefined behavior — float bits reinterpreted as int.</strong> Since val.f was written last (tag==1 means float), reading val.i reinterprets the floating-point bit pattern as an integer. The result is meaningless and UB. Always check the tag before reading.'
+  }
+];
+
+let current = 0, score = 0, answered = 0;
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+
+  const prog = document.createElement('div');
+  prog.className = 'quiz-progress';
+  prog.innerHTML = `
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-text"><span id="prog-label">Question 1 of ${questions.length}</span><span id="prog-score">Score: 0</span></div>
+  `;
+  container.appendChild(prog);
+
+  questions.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.id = `q${qi}`;
+    div.style.display = qi === 0 ? 'block' : 'none';
+    div.innerHTML = `
+      <div class="quiz-question-card">
+        <div class="q-meta">
+          <span class="q-num">Q${qi+1}/${questions.length}</span>
+          <span class="tag ${q.catColor} q-cat">${q.cat}</span>
+        </div>
+        <div class="q-text">${q.q}</div>
+        <div class="options">
+          ${q.opts.map((o,oi) => `
+            <button class="opt-btn" onclick="answer(${qi},${oi})">
+              <span class="opt-letter">${'ABCD'[oi]}</span>
+              <span>${o}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="explanation" id="exp${qi}">${q.exp}</div>
+      </div>
+      <div class="quiz-nav">
+        <button class="btn-next" id="next${qi}" onclick="next(${qi})">${qi===questions.length-1?'See Results →':'Next Question →'}</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function answer(qi, selected) {
+  const q = questions[qi];
+  const btns = document.querySelectorAll(`#q${qi} .opt-btn`);
+  btns.forEach((b,i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add('correct');
+    else if (i === selected && selected !== q.ans) b.classList.add('wrong');
+  });
+  document.getElementById(`exp${qi}`).classList.add('show');
+  document.getElementById(`next${qi}`).style.display = 'inline-block';
+  if (selected === q.ans) score++;
+  answered++;
+  updateProgress(qi+1);
+}
+
+function updateProgress(n) {
+  const pct = (n/questions.length)*100;
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = `Question ${Math.min(n,questions.length)} of ${questions.length}`;
+  document.getElementById('prog-score').textContent = `Score: ${score}`;
+}
+
+function next(qi) {
+  document.getElementById(`q${qi}`).style.display = 'none';
+  if (qi + 1 < questions.length) {
+    document.getElementById(`q${qi+1}`).style.display = 'block';
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz-container').style.display = 'none';
+  const res = document.getElementById('quiz-results');
+  res.style.display = 'block';
+  const pct = Math.round((score/questions.length)*100);
+  const grade = pct >= 90 ? ['🏆','Outstanding!','You\'re fully prepared for this exam.','var(--green)']
+    : pct >= 70 ? ['✅','Good work!','Review a few weak areas and you\'re set.','var(--accent)']
+    : pct >= 50 ? ['📖','Keep studying','Go back through the review sections.','var(--amber)']
+    : ['💪','More practice needed','Re-read all sections carefully.','var(--red)'];
+
+  const strScore = questions.filter((_,i)=>wasCorrect(i,'Strings')).length;
+
+  res.innerHTML = `
+    <div class="results">
+      <div class="score-ring" style="color:${grade[3]}">
+        <svg viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--surface2)" stroke-width="8"/>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="${grade[3]}" stroke-width="8"
+            stroke-dasharray="${2*Math.PI*52}" stroke-dashoffset="${2*Math.PI*52*(1-pct/100)}"
+            stroke-linecap="round" style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="score-text">${pct}%</div>
+      </div>
+      <h2>${grade[0]} ${grade[1]}</h2>
+      <p>${grade[2]}</p>
+      <div class="result-breakdown">
+        <div class="rb-card"><div class="rb-num" style="color:var(--green)">${score}</div><div class="rb-label">Correct</div></div>
+        <div class="rb-card"><div class="rb-num" style="color:var(--red)">${questions.length-score}</div><div class="rb-label">Wrong</div></div>
+        <div class="rb-card"><div class="rb-num" style="color:var(--accent)">${pct}%</div><div class="rb-label">Score</div></div>
+      </div>
+      <p style="font-size:12px;color:var(--dim);margin-bottom:16px">
+        ${pct>=70?'Great performance! Focus on any topics where you felt unsure.':'Spend extra time on the review sections, especially the exam traps.'}
+      </p>
+      <button class="btn-restart" onclick="restartQuiz()">🔄 Retake Quiz</button>
+    </div>
+  `;
+}
+
+function wasCorrect(qi, cat) {
+  return questions[qi].cat === cat;
+}
+
+function restartQuiz() {
+  score = 0; answered = 0; current = 0;
+  document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-container').style.display = 'block';
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>
